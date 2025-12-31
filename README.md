@@ -565,6 +565,9 @@ The output Excel file (`data/output_report.xlsx`) contains:
 2. **YOY % Column** - Calculated percentages (e.g., `15.25%`)
 3. **LM % Column** - Month-over-month percentages (e.g., `8.33%`)
 4. **Executive Summaries** - Written in the right-side panel (Column H)
+5. **Color-Coded Summaries** - Automatic formatting:
+   - 🟢 **Green background** - Upward trends (positive growth)
+   - 🔴 **Red background** - Decline trends (negative growth)
 
 ### Summary Example
 
@@ -743,6 +746,8 @@ SPECIAL: January LM = None (no previous month)
 - ✅ Top alignment for summary text
 - ✅ Percentage formatting for metrics
 - ✅ Preserves original data
+- ✅ **Green background** for positive trends (upward growth)
+- ✅ **Red background** for negative trends (decline)
 
 ---
 
@@ -932,13 +937,6 @@ If issues persist:
 - **OpenAI API Reference:** [platform.openai.com/docs](https://platform.openai.com/docs)
 - **Architecture Details:** See [ARCHITECTURE.md](ARCHITECTURE.md)
 - **Quick Start:** See [QUICKSTART.md](QUICKSTART.md)
-
----
-
-## 📝 License
-
-This project is provided as-is for educational and commercial use.
-
 
 
 ---
