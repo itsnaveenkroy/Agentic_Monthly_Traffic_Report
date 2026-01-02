@@ -46,6 +46,16 @@ This project demonstrates production-ready **Agentic AI** architecture using **L
 ✅ **Context-Aware Prompting** - Different prompts for active vs. inactive sections  
 ✅ **Multi-LLM Support** - Compatible with OpenAI (GPT-4), OpenRouter, and Ollama (local)  
 
+### Visual Formatting & Presentation
+✅ **Professional Summary Headers** - Bold "Summary / Insights" labels above each summary block  
+✅ **Subtle Borders** - Light gray borders around summary blocks for clear visual separation  
+✅ **Intelligent Color Coding** - Automatic text color based on trends:
+   - 🟢 Green for upward/positive growth
+   - 🔵 Blue for decline/negative trends (eye-pleasing, not aggressive)
+   - ⚫ Black for neutral/mixed trends  
+✅ **Typography Excellence** - Century Gothic font, 12pt, with proper text wrapping and alignment  
+✅ **Presentation-Only Formatting** - Visual enhancements without modifying logic or calculations  
+
 ### Production Features
 ✅ **Excel Integration** - Direct read/write with proper formatting, cell merging, and alignment  
 ✅ **Dynamic Section Handling** - No hardcoded assumptions, adapts to any section count  
@@ -564,10 +574,31 @@ The output Excel file (`data/output_report.xlsx`) contains:
 1. **Original Data** - Preserved from input
 2. **YOY % Column** - Calculated percentages (e.g., `15.25%`)
 3. **LM % Column** - Month-over-month percentages (e.g., `8.33%`)
-4. **Executive Summaries** - Written in the right-side panel (Column H)
-5. **Color-Coded Summaries** - Automatic formatting:
-   - 🟢 **Green background** - Upward trends (positive growth)
-   - 🔴 **Red background** - Decline trends (negative growth)
+4. **Executive Summaries** - Professional formatted summaries with:
+   - **"Summary / Insights" Header** - Bold header above each summary block
+   - **Light Gray Borders** - Subtle borders around summary blocks
+   - **Color-Coded Text** - Automatic keyword-based formatting:
+     - 🟢 **Green text (#00B050)** - Upward trends (positive growth)
+     - 🔵 **Blue text (#22577A)** - Decline trends (negative growth)
+     - ⚫ **Black text** - Neutral or mixed trends
+   - **Century Gothic Font** - Professional 12pt font
+   - **Text Wrapping** - Enabled for readability
+   - **Top Alignment** - Clean presentation
+
+### Visual Formatting Features
+
+**Summary Block Presentation:**
+- ✅ Header row with "Summary / Insights" label (bold)
+- ✅ Light gray borders (thin, #D3D3D3) around summary
+- ✅ Merged cells spanning the section height
+- ✅ Automatic color coding based on trend keywords
+- ✅ Professional typography (Century Gothic, 12pt)
+- ✅ Text wrapping enabled for multi-line summaries
+
+**Color Logic:**
+- Summary contains "upward" → **Green text** (positive emphasis)
+- Summary contains "decline" only → **Blue text** (eye-pleasing, not aggressive)
+- Summary contains neither → **Black text** (neutral)
 
 ### Summary Example
 
@@ -746,8 +777,14 @@ SPECIAL: January LM = None (no previous month)
 - ✅ Top alignment for summary text
 - ✅ Percentage formatting for metrics
 - ✅ Preserves original data
-- ✅ **Green background** for positive trends (upward growth)
-- ✅ **Red background** for negative trends (decline)
+- ✅ **"Summary / Insights" header** - Bold label above each summary
+- ✅ **Light gray borders** - Subtle borders (#D3D3D3) around summaries
+- ✅ **Color-coded text** based on trend keywords:
+  - **Green text (#00B050)** for upward/positive trends
+  - **Blue text (#22577A)** for decline/negative trends (eye-pleasing color)
+  - **Black text** for neutral or mixed trends
+- ✅ **Century Gothic font, 12pt** - Professional typography
+- ✅ **Presentation-only formatting** - No changes to logic or calculations
 
 ---
 
