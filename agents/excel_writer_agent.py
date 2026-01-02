@@ -305,8 +305,10 @@ class ExcelWriterAgent:
                                  summary_column_idx: int):
         """
         Write executive summary with proper formatting, merging, width, and keyword coloring.
-        - Entire summary colored RED if contains 'declined'
+        - Entire summary colored #22577A if contains 'declined'
         - Entire summary colored GREEN if contains 'upward'
+        
+        This formatting is presentation-only. Do not modify logic.
         
         Args:
             worksheet: openpyxl worksheet object
@@ -315,7 +317,7 @@ class ExcelWriterAgent:
             data_end_row: Ending row for summary
             summary_column_idx: Column index for summary
         """
-        from openpyxl.styles import Alignment, Font
+        from openpyxl.styles import Alignment, Font, Border, Side
         from openpyxl.utils import get_column_letter
         import re
         
@@ -323,6 +325,44 @@ class ExcelWriterAgent:
         
         # Set column width for readability
         worksheet.column_dimensions[summary_column_letter].width = 60
+        
+        # Add header "Summary / Insights" one row above the summary block
+        header_row = data_start_row - 1
+        header_cell = worksheet.cell(row=header_row, column=summary_column_idx)
+        header_cell.value = "Summary / Insights :"
+        header_cell.font = Font(name='Century Gothic', size=12, bold=True)
+        header_cell.alignment = Alignment(horizontal='left', vertical='top')
+        print(f"  [DEBUG] Added header 'Summary / Insights' at {summary_column_letter}{header_row}")
+        
+        # Determine font color based on keywords (before merging)
+        has_declined = bool(re.search(r'\bdeclined?\b', summary_text, re.IGNORECASE))
+        has_upward = bool(re.search(r'\bupward\b', summary_text, re.IGNORECASE))
+        
+        print(f"  [DEBUG] Summary text preview: {summary_text[:100]}...")
+        print(f"  [DEBUG] Keyword detection - declined: {has_declined}, upward: {has_upward}")
+        
+        # Determine the font color to use
+        # Priority: upward trend takes precedence when both keywords exist (indicates overall positive despite mentioning declines)
+        if has_upward:
+            font_color = '00B050'  # Green text for upward trend
+            color_name = "GREEN"
+        elif has_declined:
+            font_color = '22577A'  # Blue color for decline
+            color_name = "BLUE (#22577A)"
+        else:
+            font_color = '000000'  # Default black
+            color_name = "BLACK"
+        
+        print(f"  [DEBUG] Selected color: {color_name} (hex: {font_color})")
+        
+        # This formatting is presentation-only. Do not modify logic.
+        # Define light gray border
+        light_gray_border = Border(
+            left=Side(style='thin', color='D3D3D3'),
+            right=Side(style='thin', color='D3D3D3'),
+            top=Side(style='thin', color='D3D3D3'),
+            bottom=Side(style='thin', color='D3D3D3')
+        )
         
         # Merge cells vertically for the summary block
         merge_range = f"{summary_column_letter}{data_start_row}:{summary_column_letter}{data_end_row}"
@@ -332,31 +372,18 @@ class ExcelWriterAgent:
         except Exception as e:
             print(f"  [DEBUG] Could not merge cells {merge_range}: {e}")
         
-        # Write summary text to the first cell of merged range
+        # Write summary text and apply formatting to the first cell of merged range
         summary_cell = worksheet.cell(row=data_start_row, column=summary_column_idx)
         summary_cell.value = summary_text
-        
-        # Determine font color based on keywords
-        has_declined = bool(re.search(r'\bdeclined?\b', summary_text, re.IGNORECASE))
-        has_upward = bool(re.search(r'\bupward\b', summary_text, re.IGNORECASE))
-        
-        # Apply formatting for readability
+        summary_cell.border = light_gray_border
+        summary_cell.font = Font(name='Century Gothic', size=12, color=font_color)
         summary_cell.alignment = Alignment(
             horizontal='left',
             vertical='top',
             wrap_text=True  # Enable text wrapping
         )
         
-        # Apply color: Red for decline, Green for upward
-        if has_declined and not has_upward:
-            summary_cell.font = Font(size=10, color='FF0000')  # Red text
-            print(f"  [DEBUG] Applied RED formatting (decline detected)")
-        elif has_upward and not has_declined:
-            summary_cell.font = Font(size=10, color='00B050')  # Green text
-            print(f"  [DEBUG] Applied GREEN formatting (upward detected)")
-        else:
-            summary_cell.font = Font(size=10)  # Default black
-        
+        print(f"  [DEBUG] Applied {color_name} formatting and light gray border to summary block {merge_range}")
         print(f"  [DEBUG] Wrote summary to {summary_column_letter}{data_start_row} with text wrapping")
     
     def execute(self, state: Dict[str, Any]) -> Dict[str, Any]:
