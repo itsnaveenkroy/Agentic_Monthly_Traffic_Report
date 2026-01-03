@@ -1,34 +1,3 @@
-"""
-Main Entry Point for GA4 LangGraph Traffic Analysis
-Executes the complete agentic AI workflow.
-
-SETUP INSTRUCTIONS:
-===================
-
-1. CREATE VIRTUAL ENVIRONMENT:
-   
-   macOS / Linux:
-   --------------
-   python3 -m venv venv
-   source venv/bin/activate
-   
-   Windows:
-   --------
-   python -m venv venv
-   venv\\Scripts\\activate
-
-2. INSTALL DEPENDENCIES:
-   pip install -r requirements.txt
-
-3. CONFIGURE .ENV FILE:
-   - Set your LLM provider (openai, openrouter, or ollama)
-   - Add your API key
-   - Verify file paths
-
-4. RUN THE PROJECT:
-   python main.py
-"""
-
 import os
 import sys
 from dotenv import load_dotenv
