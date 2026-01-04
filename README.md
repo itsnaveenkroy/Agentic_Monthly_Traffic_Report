@@ -47,20 +47,24 @@ This project demonstrates production-ready **Agentic AI** architecture using **L
 ✅ **Multi-LLM Support** - Compatible with OpenAI (GPT-4), OpenRouter, and Ollama (local)  
 
 ### Visual Formatting & Presentation
-✅ **Professional Summary Headers** - Bold "Summary / Insights" labels above each summary block  
-✅ **Subtle Borders** - Light gray borders around summary blocks for clear visual separation  
-✅ **Intelligent Color Coding** - Automatic text color based on trends:
-   - 🟢 Green for upward/positive growth
-   - 🔵 Blue for decline/negative trends (eye-pleasing, not aggressive)
-   - ⚫ Black for neutral/mixed trends  
+✅ **Professional Summary Headers** - Bold "Summary / Insights :" labels above each summary block  
+✅ **Subtle Borders** - Light gray (#D3D3D3) borders around summary blocks for clear visual separation  
+✅ **Intelligent Color Coding** - Automatic text color based on trend keywords:
+   - 🟢 Green (#00B050) for "upward" trends (positive growth)
+   - 🔵 Blue (#22577A) for "declined" trends (eye-pleasing, not aggressive)
+   - ⚫ Black for neutral/mixed trends or no keywords  
 ✅ **Typography Excellence** - Century Gothic font, 12pt, with proper text wrapping and alignment  
 ✅ **Presentation-Only Formatting** - Visual enhancements without modifying logic or calculations  
+✅ **Priority Logic** - "Upward" keyword takes precedence when both keywords exist (indicates overall positive trend)  
 
 ### Production Features
 ✅ **Excel Integration** - Direct read/write with proper formatting, cell merging, and alignment  
 ✅ **Dynamic Section Handling** - No hardcoded assumptions, adapts to any section count  
 ✅ **Comprehensive Error Handling** - Validation, fallbacks, and detailed logging  
 ✅ **Environment-Based Configuration** - `.env` file for API keys and paths  
+✅ **Smart % Change Calculation** - Uses first year (2023) as reference baseline with Jan-Aug partial year comparison  
+✅ **Total Row Auto-Calculation** - Automatically calculates sum of all month values (replaces formulas with actual values)  
+✅ **Debug Logging** - Detailed console output for tracking metric writes and calculations  
 
 ---
 
@@ -554,6 +558,33 @@ Each section contains:
 - ❌ January LM % is **always blank** (no previous month)
 - ❌ Leave blank if previous month = 0 or null
 
+### % Change Row Calculation
+
+**Important:** The % Change row uses **Year-2023 as the reference baseline** for all subsequent year comparisons.
+
+**Column-wise behavior:**
+- **Month column:** "% Change" label
+- **Year-2023 (first numeric):** EMPTY (reference baseline - 0% change from itself)
+- **Year-2024:** `(Total_2024 - Total_2023) / Total_2023 × 100`
+- **Year-2025:** `(Jan-Aug_2025 - Jan-Aug_2023) / Jan-Aug_2023 × 100` + " (till Aug)"
+- **YOY %:** `(Jan-Aug_2025 - Jan-Aug_2024) / Jan-Aug_2024 × 100` + " (till Aug)"
+- **LM %:** EMPTY
+
+**Jan-Aug Partial Year Comparison:**
+- For 2025 (partial year), only Jan-Aug months are summed and compared to Jan-Aug of reference year
+- Adds "(till Aug)" suffix to indicate partial year comparison
+- Ensures fair comparison when full year data isn't available
+
+### Total Row Calculation
+
+**Behavior:**
+- ✅ Automatically calculates sum of all month values (Jan through Dec)
+- ✅ Writes actual numeric values (not formulas)
+- ✅ Excludes the Total row itself from the sum
+- ✅ Rounds to whole numbers (no decimals)
+- ✅ Applies to all year columns (2023, 2024, 2025)
+- ❌ Does not sum YOY % or LM % columns
+
 ### Special Handling
 
 **Empty Sections** (all zeros):
@@ -561,7 +592,9 @@ Each section contains:
 - Generate summary: *"No measurable traffic was recorded..."*
 
 **Total Rows / % Change Rows:**
-- Automatically skipped from calculations
+- Automatically skipped from month-by-month metric calculations
+- % Change row is calculated separately with its own logic
+- Total row is calculated with actual sums of monthly data
 
 ---
 
@@ -595,9 +628,12 @@ The output Excel file (`data/output_report.xlsx`) contains:
 - ✅ Professional typography (Century Gothic, 12pt)
 - ✅ Text wrapping enabled for multi-line summaries
 
-**Color Logic:**
-- Summary contains "upward" → **Green text** (positive emphasis)
-- Summary contains "decline" only → **Blue text** (eye-pleasing, not aggressive)
+**Color Logic with Priority:**
+- Summary contains "upward" → **Green text (#00B050)** - Takes PRIORITY (even if "declined" also present)
+- Summary contains "declined" (without "upward") → **Blue text (#22577A)** - Secondary (eye-pleasing, not aggressive)
+- No keywords or mixed signals → **Black text** - Neutral default
+
+**Rationale:** The "upward" keyword indicates the overall positive trend direction, so it takes precedence when both positive and negative indicators are mentioned in the same summary.
 - Summary contains neither → **Black text** (neutral)
 
 ### Summary Example
