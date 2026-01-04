@@ -169,8 +169,8 @@ class ExcelWriterAgent:
         - Month column: EMPTY
         - Year-2023 (first numeric): EMPTY (reference baseline - 0% change from itself)
         - Year-2024: (Total_2024 - Total_2023) / Total_2023 * 100
-        - Year-2025: (Total_2025 - Total_2023) / Total_2023 * 100
-        - YOY %: EMPTY (this is for month-level YOY)
+        - Year-2025: (Jan-Aug_2025 - Jan-Aug_2023) / Jan-Aug_2023 * 100 + " (till Aug)"
+        - YOY %: (Jan-Aug_2025 - Jan-Aug_2024) / Jan-Aug_2024 * 100 + " (till Aug)"
         - LM %: EMPTY
         
         This % Change behavior is intentional. First column is a reference baseline.
@@ -226,7 +226,7 @@ class ExcelWriterAgent:
             print(f"  [DEBUG] Not enough year columns for % Change calculation")
             return
         
-        # STEP 3: Load workbook with data_only=True to get Total values
+        # STEP 3: Load workbook with data_only=True to get values
         from openpyxl import load_workbook
         
         ws_data_only = None
@@ -234,16 +234,20 @@ class ExcelWriterAgent:
             try:
                 wb_data_only = load_workbook(input_path, data_only=True)
                 ws_data_only = wb_data_only[worksheet.title]
-                print(f"  [DEBUG] Loaded data_only workbook for Total values")
+                print(f"  [DEBUG] Loaded data_only workbook for values")
             except Exception as e:
                 print(f"  [DEBUG] Could not load data_only workbook: {e}")
         
-        # STEP 4: Get Total values for each year
+        # STEP 4: Get Total values AND Jan-Aug values for each year
         total_values = {}
+        jan_aug_values = {}
+        
+        # Define months Jan through Aug (rows to include)
+        jan_aug_months = ['jan', 'feb', 'march', 'april', 'may', 'june', 'july', 'aug']
+        
         for col_idx, year in year_columns:
+            # Get Total value
             total_val = None
-            
-            # Try to get from data_only workbook first
             if ws_data_only:
                 total_val = ws_data_only.cell(total_row_idx, col_idx).value
                 try:
@@ -261,6 +265,29 @@ class ExcelWriterAgent:
             if total_val and total_val > 0:
                 total_values[year] = total_val
                 print(f"  [DEBUG] Total {year}: {total_val}")
+            
+            # Calculate Jan-Aug sum for this year
+            jan_aug_sum = 0
+            for row_idx in range(section_info['data_start_row'], total_row_idx):
+                month_cell = worksheet.cell(row_idx, 2).value
+                if month_cell and isinstance(month_cell, str):
+                    month_lower = month_cell.strip().lower()
+                    if any(m in month_lower for m in jan_aug_months):
+                        # Get value from this row for the year column
+                        if ws_data_only:
+                            val = ws_data_only.cell(row_idx, col_idx).value
+                        else:
+                            val = worksheet.cell(row_idx, col_idx).value
+                        
+                        try:
+                            val = float(val) if val is not None else 0
+                            jan_aug_sum += val
+                        except:
+                            pass
+            
+            if jan_aug_sum > 0:
+                jan_aug_values[year] = jan_aug_sum
+                print(f"  [DEBUG] Jan-Aug {year}: {jan_aug_sum}")
         
         # STEP 5: Calculate % Change using FIRST year as reference
         if len(total_values) < 2:
@@ -269,12 +296,13 @@ class ExcelWriterAgent:
         
         reference_year = year_columns[0][1]  # First year is reference
         reference_total = total_values.get(reference_year)
+        reference_jan_aug = jan_aug_values.get(reference_year)
         
         if not reference_total or reference_total <= 0:
             print(f"  [DEBUG] Invalid reference total for {reference_year}: {reference_total}")
             return
         
-        print(f"  [DEBUG] Using {reference_year} as reference: {reference_total}")
+        print(f"  [DEBUG] Using {reference_year} as reference: Total={reference_total}, Jan-Aug={reference_jan_aug}")
         
         # Calculate % Change for each subsequent year vs reference
         for col_idx, year in year_columns:
@@ -282,23 +310,34 @@ class ExcelWriterAgent:
                 # Reference year stays empty (0% change from itself)
                 continue
             
-            current_total = total_values.get(year)
-            if current_total is not None:
-                pct_change = ((current_total - reference_total) / reference_total) * 100
-                worksheet.cell(row=change_row_idx, column=col_idx).value = format_percentage_for_excel(pct_change)
-                print(f"  [DEBUG] % Change for {year}: {pct_change:.2f}% (vs {reference_year})")
+            # For Year-2025, use Jan-Aug comparison with suffix
+            if year == '2025' and reference_jan_aug and reference_jan_aug > 0:
+                current_jan_aug = jan_aug_values.get(year)
+                if current_jan_aug is not None:
+                    pct_change = ((current_jan_aug - reference_jan_aug) / reference_jan_aug) * 100
+                    worksheet.cell(row=change_row_idx, column=col_idx).value = f"{pct_change:.2f}% (till Aug)"
+                    print(f"  [DEBUG] % Change for {year} (Jan-Aug): {pct_change:.2f}% (vs {reference_year} Jan-Aug)")
+                else:
+                    print(f"  [DEBUG] No Jan-Aug value for {year}, skipping")
             else:
-                print(f"  [DEBUG] No total value for {year}, skipping")
+                # For other years (2024), use total comparison
+                current_total = total_values.get(year)
+                if current_total is not None:
+                    pct_change = ((current_total - reference_total) / reference_total) * 100
+                    worksheet.cell(row=change_row_idx, column=col_idx).value = format_percentage_for_excel(pct_change)
+                    print(f"  [DEBUG] % Change for {year}: {pct_change:.2f}% (vs {reference_year})")
+                else:
+                    print(f"  [DEBUG] No total value for {year}, skipping")
         
-        # STEP 6: Calculate YOY % Change (Year-2025 vs Year-2024)
+        # STEP 6: Calculate YOY % Change (Jan-Aug 2025 vs Jan-Aug 2024) with suffix
         yoy_col_idx = column_indices.get('yoy')
-        if yoy_col_idx and '2024' in total_values and '2025' in total_values:
-            total_2024 = total_values['2024']
-            total_2025 = total_values['2025']
-            if total_2024 > 0:
-                yoy_pct_change = ((total_2025 - total_2024) / total_2024) * 100
-                worksheet.cell(row=change_row_idx, column=yoy_col_idx).value = format_percentage_for_excel(yoy_pct_change)
-                print(f"  [DEBUG] % Change YOY (2025 vs 2024): {yoy_pct_change:.2f}%")
+        if yoy_col_idx and '2024' in jan_aug_values and '2025' in jan_aug_values:
+            jan_aug_2024 = jan_aug_values['2024']
+            jan_aug_2025 = jan_aug_values['2025']
+            if jan_aug_2024 > 0:
+                yoy_pct_change = ((jan_aug_2025 - jan_aug_2024) / jan_aug_2024) * 100
+                worksheet.cell(row=change_row_idx, column=yoy_col_idx).value = f"{yoy_pct_change:.2f}% (till Aug)"
+                print(f"  [DEBUG] % Change YOY (Jan-Aug 2025 vs Jan-Aug 2024): {yoy_pct_change:.2f}%")
     
     def write_summary_to_section(self, worksheet, summary_text: str,
                                  data_start_row: int, data_end_row: int,
