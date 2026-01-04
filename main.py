@@ -21,17 +21,31 @@ def initialize_llm_client():
     
     print(f"Initializing LLM Provider: {provider.upper()}")
     
-    if provider == 'openai':
-        api_key = os.getenv('OPENAI_API_KEY')
+    if provider == 'groq':
+        from langchain_groq import ChatGroq
+        api_key = os.getenv('GROQ_API_KEY')
         if not api_key or api_key == 'your_key_here':
-            raise ValueError("OPENAI_API_KEY not set in .env file")
+            raise ValueError("GROQ_API_KEY not set in .env file")
         
-        llm = ChatOpenAI(
-            model="gpt-4",
+        llm = ChatGroq(
+            model="openai/gpt-oss-20b",
             temperature=0.3,
+            max_tokens=1200,
             api_key=api_key
         )
-        print("[+] OpenAI GPT-4 initialized")
+        print("[+] Groq OpenAI GPT-OSS-20B initialized")
+    
+    # if provider == 'openai':
+    #     api_key = os.getenv('OPENAI_API_KEY')
+    #     if not api_key or api_key == 'your_key_here':
+    #         raise ValueError("OPENAI_API_KEY not set in .env file")
+    #     
+    #     llm = ChatOpenAI(
+    #         model="gpt-4",
+    #         temperature=0.3,
+    #         api_key=api_key
+    #     )
+    #     print("[+] OpenAI GPT-4 initialized")
         
     elif provider == 'openrouter':
         api_key = os.getenv('OPENROUTER_API_KEY')
