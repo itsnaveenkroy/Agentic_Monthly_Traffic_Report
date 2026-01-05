@@ -130,9 +130,9 @@ def build_data_summary(df, yoy_col: str, lm_col: str) -> str:
         # Volatility indicator
         if len(lm_values) > 1:
             std_dev = lm_values.std()
-            if std_dev > 30:
+            if std_dev > 20:
                 summary_lines.append(f"  - Volatility: High (σ={std_dev:.2f})")
-            elif std_dev > 15:
+            elif std_dev > 10:
                 summary_lines.append(f"  - Volatility: Moderate (σ={std_dev:.2f})")
             else:
                 summary_lines.append(f"  - Volatility: Low (σ={std_dev:.2f})")

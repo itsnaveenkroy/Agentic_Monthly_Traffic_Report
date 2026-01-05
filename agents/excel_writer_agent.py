@@ -163,13 +163,13 @@ class ExcelWriterAgent:
         IMPORTANT: % Change row behavior (REPORTING REQUIREMENT)
         
         % Change row uses first numeric column (Year-2023) as REFERENCE baseline.
-        All subsequent year columns calculate % change from this reference.
+        Year-2025 uses Year-2024 as reference (matching YOY logic).
         
         Column-wise behavior:
         - Month column: EMPTY
         - Year-2023 (first numeric): EMPTY (reference baseline - 0% change from itself)
         - Year-2024: (Total_2024 - Total_2023) / Total_2023 * 100
-        - Year-2025: (Jan-Aug_2025 - Jan-Aug_2023) / Jan-Aug_2023 * 100 + " (till Aug)"
+        - Year-2025: (Jan-Aug_2025 - Jan-Aug_2024) / Jan-Aug_2024 * 100 + " (till Aug)"
         - YOY %: (Jan-Aug_2025 - Jan-Aug_2024) / Jan-Aug_2024 * 100 + " (till Aug)"
         - LM %: EMPTY
         
@@ -310,15 +310,16 @@ class ExcelWriterAgent:
                 # Reference year stays empty (0% change from itself)
                 continue
             
-            # For Year-2025, use Jan-Aug comparison with suffix
-            if year == '2025' and reference_jan_aug and reference_jan_aug > 0:
+            # For Year-2025, use Jan-Aug comparison with Year-2024 (NOT reference year)
+            if year == '2025' and '2024' in jan_aug_values:
+                jan_aug_2024 = jan_aug_values.get('2024')
                 current_jan_aug = jan_aug_values.get(year)
-                if current_jan_aug is not None:
-                    pct_change = ((current_jan_aug - reference_jan_aug) / reference_jan_aug) * 100
+                if jan_aug_2024 and jan_aug_2024 > 0 and current_jan_aug is not None:
+                    pct_change = ((current_jan_aug - jan_aug_2024) / jan_aug_2024) * 100
                     worksheet.cell(row=change_row_idx, column=col_idx).value = f"{pct_change:.2f}% (till Aug)"
-                    print(f"  [DEBUG] % Change for {year} (Jan-Aug): {pct_change:.2f}% (vs {reference_year} Jan-Aug)")
+                    print(f"  [DEBUG] % Change for {year} (Jan-Aug): {pct_change:.2f}% (vs 2024 Jan-Aug)")
                 else:
-                    print(f"  [DEBUG] No Jan-Aug value for {year}, skipping")
+                    print(f"  [DEBUG] No Jan-Aug value for {year} or 2024, skipping")
             else:
                 # For other years (2024), use total comparison
                 current_total = total_values.get(year)
@@ -329,15 +330,9 @@ class ExcelWriterAgent:
                 else:
                     print(f"  [DEBUG] No total value for {year}, skipping")
         
-        # STEP 6: Calculate YOY % Change (Jan-Aug 2025 vs Jan-Aug 2024) with suffix
-        yoy_col_idx = column_indices.get('yoy')
-        if yoy_col_idx and '2024' in jan_aug_values and '2025' in jan_aug_values:
-            jan_aug_2024 = jan_aug_values['2024']
-            jan_aug_2025 = jan_aug_values['2025']
-            if jan_aug_2024 > 0:
-                yoy_pct_change = ((jan_aug_2025 - jan_aug_2024) / jan_aug_2024) * 100
-                worksheet.cell(row=change_row_idx, column=yoy_col_idx).value = f"{yoy_pct_change:.2f}% (till Aug)"
-                print(f"  [DEBUG] % Change YOY (Jan-Aug 2025 vs Jan-Aug 2024): {yoy_pct_change:.2f}%")
+        # STEP 6: YOY column in % Change row should remain EMPTY (calculation now in Year-2025 column)
+        # This avoids duplication since Year-2025 now uses the same 2024 reference logic
+        print(f"  [DEBUG] YOY column in % Change row left empty (calculation moved to Year-2025 column)")
     
     def write_summary_to_section(self, worksheet, summary_text: str,
                                  data_start_row: int, data_end_row: int,
