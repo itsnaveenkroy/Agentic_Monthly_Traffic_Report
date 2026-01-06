@@ -46,14 +46,14 @@ class ExcelWriterAgent:
                 elif 'lm' in cell_str and '2025' in cell_str:
                     column_indices['lm'] = col_idx
         
-        # Summary column is typically 1-2 columns after LM
+        # Summary column should be in column I with minimal gap in H
         if column_indices['lm']:
             column_indices['summary'] = column_indices['lm'] + 2
         elif column_indices['yoy']:
             column_indices['summary'] = column_indices['yoy'] + 3
         else:
-            # Default to column H (8)
-            column_indices['summary'] = 8
+            # Default to column I (9) for consistency
+            column_indices['summary'] = 9
         
         return column_indices
     
@@ -357,8 +357,12 @@ class ExcelWriterAgent:
         
         summary_column_letter = get_column_letter(summary_column_idx)
         
-        # Set column width for readability
-        worksheet.column_dimensions[summary_column_letter].width = 60
+        # Set minimal width for the gap column (one before summary) to reduce spacing
+        gap_column_letter = get_column_letter(summary_column_idx - 1)
+        worksheet.column_dimensions[gap_column_letter].width = 2
+        
+        # Set column width for summary readability
+        worksheet.column_dimensions[summary_column_letter].width = 65
         
         # Add header "Summary / Insights" one row above the summary block
         header_row = data_start_row - 1
@@ -450,6 +454,7 @@ class ExcelWriterAgent:
         # Find column indices
         column_indices = self.find_yoy_lm_columns(worksheet, header_row)
         
+        print(f"  [DEBUG] Column indices found - YOY: {column_indices['yoy']}, LM: {column_indices['lm']}, Summary: {column_indices['summary']}")
         print(f"[+] Writing metrics to rows {data_start_row}-{data_end_row}")
         
         # Write metrics (FIX 5: pass section_info for % Change row)
